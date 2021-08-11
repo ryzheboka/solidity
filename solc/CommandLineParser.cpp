@@ -64,6 +64,7 @@ static string const g_strExperimentalViaIR = "experimental-via-ir";
 static string const g_strGas = "gas";
 static string const g_strHelp = "help";
 static string const g_strImportAst = "import-ast";
+static string const g_strImportAssemblyJson = "import-asm-json";
 static string const g_strInputFile = "input-file";
 static string const g_strYul = "yul";
 static string const g_strYulDialect = "yul-dialect";
@@ -481,6 +482,7 @@ bool CommandLineParser::parseOutputSelection()
 		{
 		case InputMode::Compiler:
 		case InputMode::CompilerWithASTImport:
+		case InputMode::ImportEVMAssemblyJson:
 			return contains(compilerModeOutputs, _outputName);
 		case InputMode::Assembler:
 		case InputMode::StandardJson:
@@ -638,6 +640,10 @@ General Information)").c_str(),
 			("Import ASTs to be compiled, assumes input holds the AST in compact JSON format. "
 			"Supported Inputs is the output of the --" + g_strStandardJSON + " or the one produced by "
 			"--" + g_strCombinedJson + " " + CombinedJsonRequests::componentName(&CombinedJsonRequests::ast)).c_str()
+		)
+		(
+			g_strImportAssemblyJson.c_str(),
+			"Import assembly to be used, assumes input holds assembly in JSON format. "
 		)
 	;
 	desc.add(alternativeInputModes);
@@ -875,6 +881,7 @@ bool CommandLineParser::processArgs()
 		g_strStrictAssembly,
 		g_strYul,
 		g_strImportAst,
+		g_strImportAssemblyJson,
 	}))
 		return false;
 
@@ -886,6 +893,8 @@ bool CommandLineParser::processArgs()
 		m_options.input.mode = InputMode::Linker;
 	else if (m_args.count(g_strImportAst) > 0)
 		m_options.input.mode = InputMode::CompilerWithASTImport;
+	else if (m_args.count(g_strImportAssemblyJson) > 0)
+		m_options.input.mode = InputMode::ImportEVMAssemblyJson;
 	else
 		m_options.input.mode = InputMode::Compiler;
 
@@ -915,6 +924,29 @@ bool CommandLineParser::processArgs()
 
 	for (auto& option: conflictingWithStopAfter)
 		if (!checkMutuallyExclusive({g_strStopAfter, option}))
+			return false;
+
+	array<string, 17> const conflictingWithImportEvmAssembly{
+		CompilerOutputs::componentName(&CompilerOutputs::ir),
+		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
+		g_strGas,
+		CompilerOutputs::componentName(&CompilerOutputs::asmJson),
+		CompilerOutputs::componentName(&CompilerOutputs::binaryRuntime),
+		CompilerOutputs::componentName(&CompilerOutputs::abi),
+		CompilerOutputs::componentName(&CompilerOutputs::ir),
+		CompilerOutputs::componentName(&CompilerOutputs::irOptimized),
+		CompilerOutputs::componentName(&CompilerOutputs::ewasm),
+		CompilerOutputs::componentName(&CompilerOutputs::signatureHashes),
+		CompilerOutputs::componentName(&CompilerOutputs::natspecUser),
+		CompilerOutputs::componentName(&CompilerOutputs::natspecDev),
+		CompilerOutputs::componentName(&CompilerOutputs::metadata),
+		CompilerOutputs::componentName(&CompilerOutputs::storageLayout),
+		CompilerOutputs::componentName(&CompilerOutputs::astCompactJson),
+	};
+
+	for (auto& option: conflictingWithImportEvmAssembly)
+		if (!checkMutuallyExclusive({g_strImportAssemblyJson, option}))
 			return false;
 
 	if (
@@ -1256,7 +1288,11 @@ bool CommandLineParser::processArgs()
 	if (m_options.input.mode == InputMode::Compiler)
 		m_options.input.errorRecovery = (m_args.count(g_strErrorRecovery) > 0);
 
-	solAssert(m_options.input.mode == InputMode::Compiler || m_options.input.mode == InputMode::CompilerWithASTImport);
+	solAssert(
+		m_options.input.mode == InputMode::Compiler ||
+		m_options.input.mode == InputMode::CompilerWithASTImport ||
+		m_options.input.mode == InputMode::ImportEVMAssemblyJson
+	);
 	return true;
 }
 

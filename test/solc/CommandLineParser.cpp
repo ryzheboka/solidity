@@ -226,6 +226,38 @@ BOOST_AUTO_TEST_CASE(cli_mode_options)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(import_assembly_json_mode_options)
+{
+	vector<string> commandLine = {"solc", "--import-asm-json", "input.json", "--asm", "--bin", "--opcodes"};
+
+	CommandLineOptions expectedOptions;
+	expectedOptions.input.mode = InputMode::ImportEVMAssemblyJson;
+
+	expectedOptions.input.paths = {"input.json"};
+	expectedOptions.modelChecker.initialize = true;
+	expectedOptions.compiler.outputs = {
+		false, true, false, true, true,
+		false, false, false, false, false,
+		false, false, false, false, false,
+	};
+	stringstream sout, serr;
+	optional<CommandLineOptions> parsedOptions = parseCommandLine(commandLine, sout, serr);
+	BOOST_TEST(sout.str() == "");
+	BOOST_TEST(serr.str() == "");
+	BOOST_REQUIRE(parsedOptions.has_value());
+	BOOST_TEST(parsedOptions.value() == expectedOptions);
+
+	commandLine = {"solc", "--import-asm-json", "input.json", "--bin-runtime"};
+	expectedOptions.input.mode = InputMode::ImportEVMAssemblyJson;
+	expectedOptions.input.paths = {"input.json"};
+	expectedOptions.modelChecker.initialize = true;
+	parsedOptions = parseCommandLine(commandLine, sout, serr);
+
+	BOOST_TEST(sout.str() == "");
+	BOOST_TEST(serr.str() == "The following options are mutually exclusive: --import-asm-json, --bin-runtime. Select at most one.\n");
+	BOOST_REQUIRE(!parsedOptions.has_value());
+}
+
 BOOST_AUTO_TEST_CASE(assembly_mode_options)
 {
 	static vector<tuple<vector<string>, AssemblyStack::Machine, AssemblyStack::Language>> const allowedCombinations = {
