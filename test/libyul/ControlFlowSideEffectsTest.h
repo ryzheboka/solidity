@@ -18,29 +18,23 @@
 
 #pragma once
 
-#include <set>
-#include <stack>
-#include <optional>
+#include <test/TestCase.h>
 
-namespace solidity::yul
+#include <iosfwd>
+#include <string>
+#include <vector>
+#include <memory>
+
+namespace solidity::yul::test
 {
 
-/**
- * Side effects of a user-defined or builtin function.
- */
-struct ControlFlowSideEffects
+class ControlFlowSideEffectsTest: public solidity::frontend::test::TestCase
 {
-	/// If true, the function contains at least one reachable branch that terminates successfully.
-	bool canTerminate = false;
-	/// If true, the function contains at least one reachable branch that reverts.
-	bool canRevert = false;
-	/// If true, the function has a regular outgoing control-flow.
-	bool canContinue = true;
-
-	bool terminatesOrReverts() const
-	{
-		return (canTerminate || canRevert) && !canContinue;
-	}
+public:
+	static std::unique_ptr<TestCase> create(Config const& _config)
+	{ return std::make_unique<ControlFlowSideEffectsTest>(_config.filename); }
+	explicit ControlFlowSideEffectsTest(std::string const& _filename);
+	TestResult run(std::ostream& _stream, std::string const& _linePrefix = "", bool const _formatted = false) override;
 };
 
 }
