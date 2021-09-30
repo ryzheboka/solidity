@@ -6,6 +6,7 @@ Language Features:
 
 Compiler Features:
  * Commandline Interface: Accept nested brackets in step sequences passed to ``--yul-optimizations``.
+ * Commandline Interface: Support ``--asm``, ``--bin``, ``--ir-optimized`` and ``--ewasm`` output selection options in assembler mode.
  * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
  * Standard JSON: Accept nested brackets in step sequences passed to ``settings.optimizer.details.yulDetails.optimizerSteps``.
 

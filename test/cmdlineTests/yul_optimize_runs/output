@@ -49,4 +49,3 @@ sub_0: assembly {
         /* "yul_optimize_runs/input.yul":270:288   */
       mstore
 }
-
