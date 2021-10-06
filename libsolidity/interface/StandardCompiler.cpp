@@ -441,7 +441,7 @@ std::optional<Json::Value> checkSettingsKeys(Json::Value const& _input)
 
 std::optional<Json::Value> checkModelCheckerSettingsKeys(Json::Value const& _input)
 {
-	static set<string> keys{"contracts", "divModNoSlacks", "engine", "showUnproved", "solvers", "targets", "timeout"};
+	static set<string> keys{"contracts", "divModNoSlacks", "engine", "invariants", "showUnproved", "solvers", "targets", "timeout"};
 	return checkKeys(_input, keys, "modelChecker");
 }
 
@@ -956,6 +956,27 @@ std::variant<StandardCompiler::InputsAndSettings, Json::Value> StandardCompiler:
 		if (!engine)
 			return formatFatalError("JSONError", "Invalid model checker engine requested.");
 		ret.modelCheckerSettings.engine = *engine;
+	}
+
+	if (modelCheckerSettings.isMember("invariants"))
+	{
+		auto const& invariantsArray = modelCheckerSettings["invariants"];
+		if (!invariantsArray.isArray())
+			return formatFatalError("JSONError", "settings.modelChecker.invariants must be an array.");
+
+		ModelCheckerInvariants invariants;
+		for (auto const& i: invariantsArray)
+		{
+			if (!i.isString())
+				return formatFatalError("JSONError", "Every invariant type in settings.modelChecker.invariants must be a string.");
+			if (!invariants.setFromString(i.asString()))
+				return formatFatalError("JSONError", "Invalid model checker invariants requested.");
+		}
+
+		if (invariants.invariants.empty())
+			return formatFatalError("JSONError", "settings.modelChecker.invariants must be a non-empty array.");
+
+		ret.modelCheckerSettings.invariants = invariants;
 	}
 
 	if (modelCheckerSettings.isMember("showUnproved"))
