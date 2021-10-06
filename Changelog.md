@@ -7,6 +7,7 @@ Language Features:
 Compiler Features:
  * Commandline Interface: Accept nested brackets in step sequences passed to ``--yul-optimizations``.
  * SMTChecker: Output values for ``block.*``, ``msg.*`` and ``tx.*`` variables that are present in the called functions.
+ * SMTChecker: Report contract invariants and reentrancy properties. This can be enabled via the CLI option ``--model-checker-invariants`` or the Standard JSON option ``settings.modelChecker.invariants``.
  * Standard JSON: Accept nested brackets in step sequences passed to ``settings.optimizer.details.yulDetails.optimizerSteps``.
 
 
