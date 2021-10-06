@@ -3032,20 +3032,26 @@ string FunctionType::canonicalName() const
 
 string FunctionType::toString(bool _short) const
 {
-	string name = "function ";
-	if (m_kind == Kind::Declaration)
+	string name;
+	if (m_kind == Kind::Error)
+		name += "error ";
+	else if (m_kind == Kind::Declaration)
 	{
+		name += "function ";
 		auto const* functionDefinition = dynamic_cast<FunctionDefinition const*>(m_declaration);
 		solAssert(functionDefinition, "");
 		if (auto const* contract = dynamic_cast<ContractDefinition const*>(functionDefinition->scope()))
 			name += *contract->annotation().canonicalName + ".";
 		name += functionDefinition->name();
 	}
+	else
+		name += "function ";
+
 	name += '(';
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
 		name += (*it)->toString(_short) + (it + 1 == m_parameterTypes.end() ? "" : ",");
 	name += ")";
-	if (m_stateMutability != StateMutability::NonPayable)
+	if (m_stateMutability != StateMutability::NonPayable && m_kind != Kind::Error)
 		name += " " + stateMutabilityToString(m_stateMutability);
 	if (m_kind == Kind::External)
 		name += " external";
