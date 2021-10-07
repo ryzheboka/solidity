@@ -498,8 +498,8 @@ object "D_27" {
                             returndatacopy(pos, _1, returndatasize())
                             revert(pos, returndatasize())
                         }
-                        mstore(add(allocate_memory_array_string(), 32), "/*")
-                        let memPtr := allocate_memory_array_string_482()
+                        mstore(add(allocate_memory_array_string_482(), 32), "/*")
+                        let memPtr := allocate_memory_array_string()
                         mstore(add(memPtr, 32), 0x2f2a2a204073726320303a39363a313635202022636f6e74726163742044207b)
                         mstore(add(memPtr, 64), shl(200, 0x2e2e2e22202a2f))
                         let memPos := mload(64)
@@ -514,15 +514,17 @@ object "D_27" {
                 mstore(headStart, _1)
                 let length := mload(value0)
                 mstore(add(headStart, _1), length)
-                let i := 0
+                let i := /** @src -1:-1:-1 */ 0
+                /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
                 for { } lt(i, length) { i := add(i, _1) }
                 {
                     mstore(add(add(headStart, i), 64), mload(add(add(value0, i), _1)))
                 }
                 if gt(i, length)
                 {
-                    mstore(add(add(headStart, length), 64), 0)
+                    mstore(add(add(headStart, length), 64), /** @src -1:-1:-1 */ 0)
                 }
+                /// @src 0:279:599  "contract D /** @src 0:96:165  \"contract D {...\" *\/ {..."
                 tail := add(add(headStart, and(add(length, 31), not(31))), 64)
             }
             function panic_error_0x41()
@@ -531,7 +533,7 @@ object "D_27" {
                 mstore(4, 0x41)
                 revert(0, 0x24)
             }
-            function allocate_memory_array_string() -> memPtr
+            function allocate_memory_array_string_482() -> memPtr
             {
                 let memPtr_1 := mload(64)
                 let newFreePtr := add(memPtr_1, 64)
@@ -540,7 +542,7 @@ object "D_27" {
                 memPtr := memPtr_1
                 mstore(memPtr_1, 2)
             }
-            function allocate_memory_array_string_482() -> memPtr
+            function allocate_memory_array_string() -> memPtr
             {
                 let memPtr_1 := mload(64)
                 let newFreePtr := add(memPtr_1, 96)
