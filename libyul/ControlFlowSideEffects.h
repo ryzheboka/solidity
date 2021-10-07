@@ -18,10 +18,6 @@
 
 #pragma once
 
-#include <set>
-#include <stack>
-#include <optional>
-
 namespace solidity::yul
 {
 

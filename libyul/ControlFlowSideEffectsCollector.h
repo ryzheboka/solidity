@@ -34,9 +34,13 @@ struct Dialect;
 struct ControlFlowNode
 {
 	std::vector<ControlFlowNode const*> successors;
+	/// Name of the called function if the node calls a function.
 	std::optional<YulString> functionCall;
 };
 
+/**
+ * The control flow of a function with entry and exit nodes.
+ */
 struct FunctionFlow
 {
 	ControlFlowNode const* entry;

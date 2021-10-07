@@ -27,6 +27,7 @@
 #include <libsolutil/Algorithms.h>
 
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/algorithm/find_if.hpp>
 
 using namespace std;
 using namespace solidity::yul;
@@ -35,7 +36,7 @@ void ControlFlowBuilder::operator()(FunctionCall const& _functionCall)
 {
 	walkVector(_functionCall.arguments | ranges::views::reverse);
 	newConnectedNode();
-	m_currentNode->functionCall = {_functionCall.functionName.name};
+	m_currentNode->functionCall = _functionCall.functionName.name;
 }
 
 void ControlFlowBuilder::operator()(If const& _if)
@@ -89,10 +90,10 @@ void ControlFlowBuilder::operator()(FunctionDefinition const& _function)
 
 void ControlFlowBuilder::operator()(ForLoop const& _for)
 {
-	(*this)(_for.pre);
-
 	ScopedSaveAndRestore scopedBreakNode(m_break, nullptr);
 	ScopedSaveAndRestore scopedContinueNode(m_continue, nullptr);
+
+	(*this)(_for.pre);
 
 	ControlFlowNode* breakNode = newNode();
 	m_break = breakNode;
@@ -232,19 +233,16 @@ bool ControlFlowSideEffectsCollector::processFunction(YulString _name)
 
 ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(YulString _functionName)
 {
-	auto it = m_pendingNodes[_functionName].begin();
-	auto end = m_pendingNodes[_functionName].end();
-	while (it != end)
-	{
-		ControlFlowNode const* node = *it;
-		if (!node->functionCall || exitKnownReachable(*node->functionCall))
-		{
-			m_pendingNodes[_functionName].erase(it);
-			return node;
-		}
-		++it;
-	}
-	return nullptr;
+	std::list<ControlFlowNode const*>& nodes = m_pendingNodes[_functionName];
+	auto it = ranges::find_if(nodes, [this](ControlFlowNode const* _node) {
+		return !_node->functionCall || exitKnownReachable(*_node->functionCall);
+	});
+	if (it == nodes.end())
+		return nullptr;
+
+	ControlFlowNode const* node = *it;
+	m_pendingNodes[_functionName].erase(it);
+	return node;
 }
 
 bool ControlFlowSideEffectsCollector::exitKnownReachable(YulString _calledFunction) const
