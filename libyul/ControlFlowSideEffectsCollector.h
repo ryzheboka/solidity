@@ -105,10 +105,9 @@ private:
 	/// De-queues the node or returns nullptr if no such node is found.
 	ControlFlowNode const* nextProcessableNode(YulString _functionName);
 
-	/// @returns true if we know that the function has a control-flow
-	/// branch that exits the function regularly (also works for built-in
-	/// functions).
-	bool exitKnownReachable(YulString _functionName) const;
+	/// @returns the side-effects of either a builtin call or a user defined function
+	/// call (as far as already computed).
+	ControlFlowSideEffects const& sideEffects(YulString _functionName) const;
 
 	/// Queues the given node to be processed (if not already visited)
 	/// and if it is a function call, records that `_functionName` calls

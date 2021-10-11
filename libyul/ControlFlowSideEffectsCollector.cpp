@@ -235,7 +235,7 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(YulS
 {
 	std::list<ControlFlowNode const*>& nodes = m_pendingNodes[_functionName];
 	auto it = ranges::find_if(nodes, [this](ControlFlowNode const* _node) {
-		return !_node->functionCall || exitKnownReachable(*_node->functionCall);
+		return !_node->functionCall || sideEffects(*_node->functionCall).canContinue;
 	});
 	if (it == nodes.end())
 		return nullptr;
@@ -245,16 +245,12 @@ ControlFlowNode const* ControlFlowSideEffectsCollector::nextProcessableNode(YulS
 	return node;
 }
 
-bool ControlFlowSideEffectsCollector::exitKnownReachable(YulString _calledFunction) const
+ControlFlowSideEffects const& ControlFlowSideEffectsCollector::sideEffects(YulString _functionName) const
 {
-	if (auto const* builtin = m_dialect.builtin(_calledFunction))
-	{
-		if (builtin->controlFlowSideEffects.canContinue)
-			return true;
-	}
-	else if (m_functionSideEffects.at(_calledFunction).canContinue)
-		return true;
-	return false;
+	if (auto const* builtin = m_dialect.builtin(_functionName))
+		return builtin->controlFlowSideEffects;
+	else
+		return m_functionSideEffects.at(_functionName);
 }
 
 void ControlFlowSideEffectsCollector::recordReachabilityAndQueue(
