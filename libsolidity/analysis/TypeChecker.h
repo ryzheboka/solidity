@@ -38,6 +38,8 @@ class ErrorReporter;
 namespace solidity::frontend
 {
 
+class GlobalContext;
+
 /**
  * The module that performs type analysis on the AST, checks the applicability of operations on
  * those types and stores errors for invalid operations.
@@ -47,9 +49,10 @@ class TypeChecker: private ASTConstVisitor
 {
 public:
 	/// @param _errorReporter provides the error logging functionality.
-	TypeChecker(langutil::EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter):
+	TypeChecker(langutil::EVMVersion _evmVersion, langutil::ErrorReporter& _errorReporter, GlobalContext& _globalContext):
 		m_evmVersion(_evmVersion),
-		m_errorReporter(_errorReporter)
+		m_errorReporter(_errorReporter),
+		m_globalContext(_globalContext)
 	{}
 
 	/// Performs type checking on the given source and all of its sub-nodes.
@@ -190,6 +193,8 @@ private:
 	langutil::EVMVersion m_evmVersion;
 
 	langutil::ErrorReporter& m_errorReporter;
+
+	GlobalContext const& m_globalContext;
 };
 
 }

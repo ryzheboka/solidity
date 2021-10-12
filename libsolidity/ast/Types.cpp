@@ -3030,41 +3030,71 @@ string FunctionType::canonicalName() const
 	return "function";
 }
 
+constexpr bool isBuiltinFunction(FunctionType::Kind _kind)
+{
+	switch (_kind)
+	{
+	case FunctionType::Kind::ABIDecode:
+	case FunctionType::Kind::ABIEncode:
+	case FunctionType::Kind::ABIEncodePacked:
+	case FunctionType::Kind::ABIEncodeWithSelector:
+	case FunctionType::Kind::ABIEncodeWithSignature:
+	case FunctionType::Kind::AddMod:
+	case FunctionType::Kind::ArrayPop:
+	case FunctionType::Kind::ArrayPush:
+	case FunctionType::Kind::Assert:
+	case FunctionType::Kind::BlockHash:
+	case FunctionType::Kind::BytesConcat:
+	case FunctionType::Kind::Declaration:
+	case FunctionType::Kind::ECRecover:
+	case FunctionType::Kind::Error:
+	case FunctionType::Kind::Event:
+	case FunctionType::Kind::GasLeft:
+	case FunctionType::Kind::KECCAK256:
+	case FunctionType::Kind::MetaType:
+	case FunctionType::Kind::MulMod:
+	case FunctionType::Kind::ObjectCreation:
+	case FunctionType::Kind::RIPEMD160:
+	case FunctionType::Kind::Require:
+	case FunctionType::Kind::Revert:
+	case FunctionType::Kind::SHA256:
+	case FunctionType::Kind::Selfdestruct:
+	case FunctionType::Kind::Send:
+	case FunctionType::Kind::SetGas:
+	case FunctionType::Kind::SetValue:
+	case FunctionType::Kind::Transfer:
+	case FunctionType::Kind::Unwrap:
+	case FunctionType::Kind::Wrap:
+		return true;
+	case FunctionType::Kind::BareCall:
+	case FunctionType::Kind::BareCallCode:
+	case FunctionType::Kind::BareDelegateCall:
+	case FunctionType::Kind::BareStaticCall:
+	case FunctionType::Kind::Creation:
+	case FunctionType::Kind::DelegateCall:
+	case FunctionType::Kind::External:
+	case FunctionType::Kind::Internal:
+		return false;
+	}
+	solAssert(false, "");
+	return false;
+}
+
 string FunctionType::toString(bool _short) const
 {
-	static map<Kind, string_view> const builtinNames =
-	{
-		{Kind::ABIDecode, "abi.decode"sv},
-		{Kind::ABIEncode, "abi.encode"sv},
-		{Kind::ABIEncodePacked, "abi.encodePacked"sv},
-		{Kind::ABIEncodeWithSelector, "encodeWithSelector"sv},
-		{Kind::ABIEncodeWithSignature, "encodeWithSignature"sv},
-		{Kind::AddMod, "addmod"sv},
-		{Kind::ArrayPush, "push"sv},
-		{Kind::Assert, "assert"},
-		{Kind::BlockHash, "blockhash"sv},
-		{Kind::BytesConcat, "bytes.concat"sv},
-		{Kind::ECRecover, "ecrecover"sv},
-		{Kind::Error, "error "sv},
-		{Kind::Event, "event "sv},
-		{Kind::GasLeft, "gasleft"sv},
-		{Kind::KECCAK256, "keccak256"sv},
-		{Kind::MetaType, "type"sv},
-		{Kind::MulMod, "mulmod"sv},
-		{Kind::RIPEMD160, "ripemd160"sv},
-		{Kind::Require, "require"sv},
-		{Kind::Revert, "revert"sv},
-		{Kind::SHA256, "sha256"sv},
-		{Kind::Selfdestruct, "selfdestruct"sv},
-		{Kind::Send, "send"sv},
-		{Kind::Transfer, "transfer"sv},
-		{Kind::Unwrap, "unwrap"sv},
-		{Kind::Wrap, "wrap"sv},
-	};
-
 	string name;
-	if (auto i = builtinNames.find(m_kind); i != builtinNames.end())
-		name += i->second;
+
+	if (m_kind == Kind::Event)
+		name += "event " + m_declaration->name();
+	else if (m_kind == Kind::Error)
+		name += "error " + m_declaration->name();
+	else if (isBuiltinFunction(m_kind))
+	{
+		if (m_declaration)
+			name += m_declaration->name();
+		else
+			name += "BUILTIN:" + to_string((int)m_kind) + " "; // TODO(pr): e.g. ecrecover
+	}
 	else if (m_kind == Kind::Declaration)
 	{
 		name += "function ";
@@ -3076,9 +3106,6 @@ string FunctionType::toString(bool _short) const
 	}
 	else
 		name += "function ";
-
-	if (m_kind == Kind::Event)
-		name += m_declaration->name();
 
 	name += '(';
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)

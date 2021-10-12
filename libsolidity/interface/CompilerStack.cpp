@@ -474,7 +474,7 @@ bool CompilerStack::analyze()
 		//
 		// Note: this does not resolve overloaded functions. In order to do that, types of arguments are needed,
 		// which is only done one step later.
-		TypeChecker typeChecker(m_evmVersion, m_errorReporter);
+		TypeChecker typeChecker(m_evmVersion, m_errorReporter, m_globalContext);
 		for (Source const* source: m_sourceOrder)
 			if (source->ast && !typeChecker.checkTypeRequirements(*source->ast))
 				noErrors = false;

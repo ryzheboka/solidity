@@ -22,6 +22,7 @@
  */
 
 #include <libsolidity/analysis/TypeChecker.h>
+#include <libsolidity/analysis/GlobalContext.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTUtils.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -2778,8 +2779,9 @@ bool TypeChecker::visit(MemberAccess const& _memberAccess)
 		}
 
 		auto [errorId, description] = [&]() -> tuple<ErrorId, string> {
+			string exprTypeSig = exprType->toString(); // TODO(pr): with the help of m_globalContext for builtin-types, construct signature.
 			string errorMsg = "Member \"" + memberName + "\" not found or not visible "
-				"after argument-dependent lookup in " + exprType->toString() + ".";
+				"after argument-dependent lookup in " + exprTypeSig + ".";
 
 			if (auto const* funType = dynamic_cast<FunctionType const*>(exprType))
 			{
