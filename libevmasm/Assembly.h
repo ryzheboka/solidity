@@ -152,7 +152,8 @@ public:
 
 	/// Create a JSON representation of the assembly.
 	Json::Value assemblyJSON(
-		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>()
+		std::map<std::string, unsigned> const& _sourceIndices = std::map<std::string, unsigned>(),
+		bool _includeSourceList = true
 	) const;
 
 	bool loadFromAssemblyJSON(Json::Value const& _json);

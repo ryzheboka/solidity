@@ -227,7 +227,6 @@ AssemblyItem Assembly::loadItemFromJSON(Json::Value const& _json)
 	std::string name = _json["name"].isString() ? _json["name"].asString() : "";
 	int begin = _json["begin"].isInt() ? _json["begin"].asInt() : -1;
 	int end = _json["end"].isInt() ?  _json["end"].asInt() : -1;
-	int source = _json["source"].isInt() ?  _json["source"].asInt() : -1;
 	std::string value = _json["value"].isString() ? _json["value"].asString() : "";
 	std::string jumpType = _json["jumpType"].isString() ? _json["jumpType"].asString() : "";
 	solAssert(!name.empty(), "");
@@ -253,7 +252,6 @@ AssemblyItem Assembly::loadItemFromJSON(Json::Value const& _json)
 	SourceLocation location;
 	location.start = begin;
 	location.end = end;
-	location.sourceIndex = source;
 	if (c_instructions.find(name) != c_instructions.end())
 	{
 		AssemblyItem item{c_instructions.at(name), location};
@@ -421,18 +419,26 @@ vector<Json::Value> Assembly::assemblyItemAsJSON(AssemblyItem const& _item, int 
 	return result;
 }
 
-Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) const
+Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices, bool _includeSourceList) const
 {
 	Json::Value root;
-	root[".code"] = Json::arrayValue;
+	if (_includeSourceList)
+	{
+		root["source-list"] = Json::arrayValue;
+		Json::Value& sourceList = root["source-list"];
+		std::vector<string> sources(_sourceIndices.size());
+		for (auto const& item: _sourceIndices)
+			sources[item.second] = item.first;
+		for (auto const& item: sources)
+			sourceList.append(item);
+	}
 
-	Json::Value& collection = root[".code"];
+	root[".code"] = Json::arrayValue;
+	Json::Value& code = root[".code"];
 	for (AssemblyItem const& i: m_items)
 	{
 		int sourceIndex = -1;
-		if (i.location().sourceIndex.has_value())
-			sourceIndex = i.location().sourceIndex.value();
-		else if (i.location().sourceName)
+		if (i.location().sourceName)
 		{
 			auto iter = _sourceIndices.find(*i.location().sourceName);
 			if (iter != _sourceIndices.end())
@@ -440,7 +446,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		}
 
 		for (Json::Value const& item: assemblyItemAsJSON(i, sourceIndex))
-			collection.append(item);
+			code.append(item);
 	}
 
 	if (!m_data.empty() || !m_subs.empty())
@@ -455,7 +461,7 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		{
 			std::stringstream hexStr;
 			hexStr << hex << i;
-			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices);
+			data[hexStr.str()] = m_subs[i]->assemblyJSON(_sourceIndices, false);
 		}
 	}
 

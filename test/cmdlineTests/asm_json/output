@@ -1582,5 +1582,10 @@ EVM assembly:
         }
       ]
     }
-  }
+  },
+  "source-list":
+  [
+    "asm_json/input.sol",
+    "#utility.yul"
+  ]
 }
