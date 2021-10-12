@@ -407,6 +407,9 @@ Input Description
           "divModWithSlacks": true,
           // Choose which model checker engine to use: all (default), bmc, chc, none.
           "engine": "chc",
+          // Choose whether external calls should be considered trusted in case the
+          // code of the called function is available at compile-time.
+          "extCalls": "trusted",
           // Choose whether to output all unproved targets. The default is `false`.
           "showUnproved": true,
           // Choose which solvers should be used, if available.
