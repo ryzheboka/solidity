@@ -141,6 +141,11 @@ FunctionCall const* Predicate::programFunctionCall() const
 	return dynamic_cast<FunctionCall const*>(m_node);
 }
 
+VariableDeclaration  const* Predicate::programVariable() const
+{
+	return dynamic_cast<VariableDeclaration const*>(m_node);
+}
+
 optional<vector<VariableDeclaration const*>> Predicate::stateVariables() const
 {
 	if (m_contractContext)
@@ -205,6 +210,9 @@ string Predicate::formatSummaryCall(
 ) const
 {
 	solAssert(isSummary(), "");
+
+	if (programVariable())
+		return {};
 
 	if (auto funCall = programFunctionCall())
 	{
@@ -334,6 +342,8 @@ vector<optional<string>> Predicate::summaryStateValues(vector<smtutil::Expressio
 		stateFirst = _args.begin() + 7 + static_cast<int>(stateVars->size());
 		stateLast = stateFirst + static_cast<int>(stateVars->size());
 	}
+	else if (programVariable())
+		return {};
 	else
 		solAssert(false, "");
 
