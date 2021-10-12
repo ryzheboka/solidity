@@ -3032,9 +3032,39 @@ string FunctionType::canonicalName() const
 
 string FunctionType::toString(bool _short) const
 {
+	static map<Kind, string_view> const builtinNames =
+	{
+		{Kind::ABIDecode, "abi.decode"sv},
+		{Kind::ABIEncode, "abi.encode"sv},
+		{Kind::ABIEncodePacked, "abi.encodePacked"sv},
+		{Kind::ABIEncodeWithSelector, "encodeWithSelector"sv},
+		{Kind::ABIEncodeWithSignature, "encodeWithSignature"sv},
+		{Kind::AddMod, "addmod"sv},
+		{Kind::ArrayPush, "push"sv},
+		{Kind::Assert, "assert"},
+		{Kind::BlockHash, "blockhash"sv},
+		{Kind::BytesConcat, "bytes.concat"sv},
+		{Kind::ECRecover, "ecrecover"sv},
+		{Kind::Error, "error "sv},
+		{Kind::Event, "event "sv},
+		{Kind::GasLeft, "gasleft"sv},
+		{Kind::KECCAK256, "keccak256"sv},
+		{Kind::MetaType, "type"sv},
+		{Kind::MulMod, "mulmod"sv},
+		{Kind::RIPEMD160, "ripemd160"sv},
+		{Kind::Require, "require"sv},
+		{Kind::Revert, "revert"sv},
+		{Kind::SHA256, "sha256"sv},
+		{Kind::Selfdestruct, "selfdestruct"sv},
+		{Kind::Send, "send"sv},
+		{Kind::Transfer, "transfer"sv},
+		{Kind::Unwrap, "unwrap"sv},
+		{Kind::Wrap, "wrap"sv},
+	};
+
 	string name;
-	if (m_kind == Kind::Error)
-		name += "error ";
+	if (auto i = builtinNames.find(m_kind); i != builtinNames.end())
+		name += i->second;
 	else if (m_kind == Kind::Declaration)
 	{
 		name += "function ";
@@ -3046,6 +3076,9 @@ string FunctionType::toString(bool _short) const
 	}
 	else
 		name += "function ";
+
+	if (m_kind == Kind::Event)
+		name += m_declaration->name();
 
 	name += '(';
 	for (auto it = m_parameterTypes.begin(); it != m_parameterTypes.end(); ++it)
