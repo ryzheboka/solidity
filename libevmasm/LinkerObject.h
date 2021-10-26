@@ -57,6 +57,10 @@ struct LinkerObject
 	/// Bytecode offsets of named tags like function entry points.
 	std::map<std::string, FunctionDebugData> functionDebugData;
 
+	/// Empties the linkReferences map and fills it with offsets of placeholders
+	/// from the string representation of code
+	void fillLinkReferences(std::string hexRepresentation);
+
 	/// Appends the bytecode of @a _other and incorporates its link references.
 	void append(LinkerObject const& _other);
 
