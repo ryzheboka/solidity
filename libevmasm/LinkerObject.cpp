@@ -36,7 +36,6 @@ void LinkerObject::append(LinkerObject const& _other)
 	bytecode += _other.bytecode;
 }
 
-<<<<<<< HEAD
 void LinkerObject::fillLinkReferences(std::string hexRepresentation)
 {
 	std::string foundPlaceholder;
