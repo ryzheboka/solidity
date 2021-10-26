@@ -36,6 +36,31 @@ void LinkerObject::append(LinkerObject const& _other)
 	bytecode += _other.bytecode;
 }
 
+void fillLinkReferences(std::string hexRepresentation)
+{
+	linkReferences.clear();
+	for (auto it = src.second.begin(); it != hexRepresentation.end();)
+	{
+		while (it !=  && *it != hexRepresentation.end() && *it != '_') ++it;
+		if (it == regexMatch[0].second) break;
+		if (
+			regexMatch[0].second - it < placeholderSize ||
+			*(it + 1) != '_' ||
+			*(it + placeholderSize - 2) != '_' ||
+			*(it + placeholderSize - 1) != '_'
+		)
+		{
+			serr() << "Error in binary object file " << src.first << " at position " << (it - src.second.begin()) << endl;
+			serr() << '"' << string(it, it + min(placeholderSize, static_cast<int>(end - it))) << "\" is not a valid link reference." << endl;
+			return false;
+		}
+
+		string foundPlaceholder(it, it + placeholderSize);
+		linkReferences[(it-src.second.begin())*4] = foundPlaceholder;
+		it += placeholderSize;
+	}
+}
+
 void LinkerObject::link(map<string, h160> const& _libraryAddresses)
 {
 	std::map<size_t, std::string> remainingRefs;
