@@ -55,6 +55,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <regex>
 
 #include <range/v3/view/map.hpp>
 
@@ -911,41 +912,31 @@ bool CommandLineInterface::link()
 		librariesReplacements[replacement] = library.second;
 	}
 
+	regex bytecodeExpr = ("(^|\n)[a-f0-9_$]+\n");
+	smatch regexMatch;
+	map<size_t, string> linkOffsets;
+	LinkerObject linkerObj = {
+    	.linkReferences = linkOffsets
+    };
+
 	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
+
 	for (auto& src: sourceCodes)
 	{
-		auto end = src.second.end();
-		for (auto it = src.second.begin(); it != end;)
-		{
-			while (it != end && *it != '_') ++it;
-			if (it == end) break;
-			if (
-				end - it < placeholderSize ||
-				*(it + 1) != '_' ||
-				*(it + placeholderSize - 2) != '_' ||
-				*(it + placeholderSize - 1) != '_'
-			)
-			{
-				serr() << "Error in binary object file " << src.first << " at position " << (it - src.second.begin()) << endl;
-				serr() << '"' << string(it, it + min(placeholderSize, static_cast<int>(end - it))) << "\" is not a valid link reference." << endl;
-				return false;
-			}
 
-			string foundPlaceholder(it, it + placeholderSize);
-			if (librariesReplacements.count(foundPlaceholder))
-			{
-				string hexStr(toHex(librariesReplacements.at(foundPlaceholder).asBytes()));
-				copy(hexStr.begin(), hexStr.end(), it);
-			}
-			else
-				serr() << "Reference \"" << foundPlaceholder << "\" in file \"" << src.first << "\" still unresolved." << endl;
-			it += placeholderSize;
+		auto end = src.second.end();
+		auto it = src.second.begin();
+		// find next bytecode in the file
+		while (std::regex_search (it, end, regexMatch, bytecodeExpr))
+		{
+			it = regexMatch[0].first;
+			std::string bytecodeAsHex = std::string(it, regexMatch[0].second)
+			linkerObj.fillLinkReferences(bytecodeAsHex);
+			linkerObj.bytecode = fromHex(bytecodeAsHex), WhenError::Throw);
+			linkerObj.link(librariesReplacements);
+			src.replace(it, bytecodeAsHex.length(), linkerObj.toHex());
 		}
-		// Remove hints for resolved libraries.
-		for (auto const& library: m_options.linker.libraries)
-			boost::algorithm::erase_all(src.second, "\n" + libraryPlaceholderHint(library.first));
-		while (!src.second.empty() && *prev(src.second.end()) == '\n')
-			src.second.resize(src.second.size() - 1);
+
 	}
 	m_fileReader.setSources(move(sourceCodes));
 
