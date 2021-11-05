@@ -912,29 +912,32 @@ bool CommandLineInterface::link()
 		librariesReplacements[replacement] = library.second;
 	}
 
-	regex bytecodeExpr = ("(^|\n)[a-f0-9_$]+\n");
+	regex bytecodeExpr("(^|\n)[a-f0-9_$]+\n");
 	smatch regexMatch;
-	map<size_t, string> linkOffsets;
-	LinkerObject linkerObj = {
-    	.linkReferences = linkOffsets
-    };
+	//map<size_t, string> linkOffsets;
+	solidity::evmasm::LinkerObject linkerObj; // = {
+    //	.linkReferences = linkOffsets
+    //};
 
 	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
 
 	for (auto& src: sourceCodes)
 	{
 
-		auto end = src.second.end();
-		auto it = src.second.begin();
+		std::string::const_iterator end = src.second.end();
+		std::string::const_iterator it = src.second.begin();
 		// find next bytecode in the file
-		while (std::regex_search (it, end, regexMatch, bytecodeExpr))
+		std::string tmps = std::string(it, end);
+		while (std::regex_search(tmps, regexMatch, bytecodeExpr))
 		{
 			it = regexMatch[0].first;
-			std::string bytecodeAsHex = std::string(it, regexMatch[0].second)
+			std::string bytecodeAsHex = std::string(it, regexMatch[0].second);
 			linkerObj.fillLinkReferences(bytecodeAsHex);
-			linkerObj.bytecode = fromHex(bytecodeAsHex), WhenError::Throw);
+			linkerObj.bytecode = fromHex(bytecodeAsHex, WhenError::Throw);
 			linkerObj.link(librariesReplacements);
-			src.replace(it, bytecodeAsHex.length(), linkerObj.toHex());
+			src.second.replace(it, end, linkerObj.toHex());
+			it = regexMatch[0].second;
+			tmps = std::string(it, end);
 		}
 
 	}
