@@ -914,10 +914,7 @@ bool CommandLineInterface::link()
 
 	regex bytecodeExpr("(^|\n)[a-f0-9_$]+\n");
 	smatch regexMatch;
-	//map<size_t, string> linkOffsets;
-	solidity::evmasm::LinkerObject linkerObj; // = {
-    //	.linkReferences = linkOffsets
-    //};
+	solidity::evmasm::LinkerObject linkerObj;
 
 	FileReader::StringMap sourceCodes = m_fileReader.sourceCodes();
 
@@ -932,12 +929,18 @@ bool CommandLineInterface::link()
 		{
 			it = regexMatch[0].first;
 			std::string bytecodeAsHex = std::string(it, regexMatch[0].second);
+			bytecodeAsHex.erase(std::remove(bytecodeAsHex.begin(), bytecodeAsHex.end(), '\n'), bytecodeAsHex.end());
 			linkerObj.fillLinkReferences(bytecodeAsHex);
+			std::replace(bytecodeAsHex.begin(), bytecodeAsHex.end(), '_', 'f');
+			std::replace(bytecodeAsHex.begin(), bytecodeAsHex.end(), '$', 'f');
 			linkerObj.bytecode = fromHex(bytecodeAsHex, WhenError::Throw);
 			linkerObj.link(librariesReplacements);
-			src.second.replace(it, end, linkerObj.toHex());
-			it = regexMatch[0].second;
-			tmps = std::string(it, end);
+			//unsigned long position = (unsigned)std::distance((std::string::const_iterator) src.second.begin(), it);
+			unsigned long length =  (unsigned)regexMatch.prefix().length();
+			string hexRepr = linkerObj.toHex();
+			src.second.replace((unsigned)regexMatch.position(), length, hexRepr);
+			//it = regexMatch[0].second;
+			tmps = src.second.substr((unsigned)regexMatch.position(), hexRepr.length());
 		}
 
 	}
